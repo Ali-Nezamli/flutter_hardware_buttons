@@ -1,5 +1,6 @@
 package flutter.moum.hardware_buttons
 
+import android.app.Activity
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.PluginRegistry
 
@@ -12,18 +13,23 @@ class HardwareButtonsPlugin {
         @JvmStatic
         fun registerWith(registrar: PluginRegistry.Registrar) {
             val activity = registrar.activity()
-            val application = activity.application
+            activity?.let { safeActivity ->
+                val application = safeActivity.application
 
-            registrar.addActivityResultListener(HardwareButtonsWatcherManager.getInstance(application, activity))
+                registrar.addActivityResultListener(HardwareButtonsWatcherManager.getInstance(application, safeActivity))
 
-            val volumeButtonChannel = EventChannel(registrar.messenger(), VOLUME_BUTTON_CHANNEL_NAME)
-            volumeButtonChannel.setStreamHandler(VolumeButtonStreamHandler(activity))
+                val volumeButtonChannel = EventChannel(registrar.messenger(), VOLUME_BUTTON_CHANNEL_NAME)
+                volumeButtonChannel.setStreamHandler(VolumeButtonStreamHandler(safeActivity))
 
-            val homeButtonChannel = EventChannel(registrar.messenger(), HOME_BUTTON_CHANNEL_NAME)
-            homeButtonChannel.setStreamHandler(HomeButtonStreamHandler(activity))
+                val homeButtonChannel = EventChannel(registrar.messenger(), HOME_BUTTON_CHANNEL_NAME)
+                homeButtonChannel.setStreamHandler(HomeButtonStreamHandler(safeActivity))
 
-            val lockButtonChannel = EventChannel(registrar.messenger(), LOCK_BUTTON_CHANNEL_NAME)
-            lockButtonChannel.setStreamHandler(LockButtonStreamHandler(activity))
+                val lockButtonChannel = EventChannel(registrar.messenger(), LOCK_BUTTON_CHANNEL_NAME)
+                lockButtonChannel.setStreamHandler(LockButtonStreamHandler(safeActivity))
+            } ?: run {
+                // Handle the case where activity is null, if necessary
+                println("Activity is null")
+            }
         }
     }
 }
